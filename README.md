@@ -14,6 +14,7 @@ improve my Haskell skills.
 
 ## Next milestones
 * extend comments to haddock documentation
-* add tests
+* add more tests
 * add random color
 * integrate into a web service
+* write a usage documentation

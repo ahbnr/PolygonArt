@@ -48,3 +48,7 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - PolygonArt
+    - tasty == 1.0.1.1
+    - tasty-smallcheck
+    - tasty-hunit
+    - composition == 1.0.2.1
