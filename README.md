@@ -46,9 +46,12 @@ Here a complete example for generating and displaying an image on a graphical Li
 stack exec polygon 1337 > output.svg && xdg-open output.svg
 ```
 
+## Documentation (Haddock)
+```console
+stack haddock
+```
+
 ## Next milestones
-* extend comments to haddock documentation
-* add more tests
 * add random color
 * integrate into a web service
-* write a usage documentation
+* add more tests

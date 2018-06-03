@@ -9,22 +9,26 @@ import Numeric.Natural as Natural
 
 import qualified Statistics
 
-data Point = Point Double Double deriving (Eq, Show)
+data Vertex = Vertex Double Double deriving (Eq, Show)
 
--- Points must be in in order around the boundary!
--- here, polygons are modelled as arrays
-type Polygon = Array Natural Point
+-- Polygons are modelled as arrays
+--
+-- All functions using this type make the following assumptions:
+-- * the vertices within the array are in clockwise order around the boundary
+-- * indices start at 1 (allows for cleaner code with the Natual data type).
+type Polygon = Array Natural Vertex
 
-polygon :: [Point] -> Polygon
--- note: Polygon array indices start at 1!
--- This allows for 'cleaner' math in the remaining code
-polygon ps = listArray (1, length' ps) ps -- TODO: What if the list is empty?
+polygon :: [Vertex] -> Polygon
+-- ^construct a polygon from a set of vertices.
+polygon ps = listArray (1, length' ps) ps
 
-points :: Polygon -> [Point]
-points = elems
+vertices :: Polygon -> [Vertex]
+-- ^get a list of all vertices of a polygon
+vertices = elems
 
-nthPoint :: Polygon -> Natural -> Maybe Point
-nthPoint poly i
+nthVertex :: Polygon -> Natural -> Maybe Vertex
+-- ^Retrieve the nth vertex of a polygon in clockwise order around the boundary
+nthVertex poly i
   | len <= 0 || i < minIndex = Nothing
   | otherwise              = Just (poly ! i')
   where
@@ -32,49 +36,54 @@ nthPoint poly i
     i' = minIndex + (i - minIndex) `mod` len
 
     (minIndex, _) = bounds poly
-    len = numPoints poly
+    len = numVertices poly
 
-numPoints :: Polygon -> Natural
-numPoints poly = len (bounds poly)
+numVertices :: Polygon -> Natural
+-- ^retrieve the number of vertices of a polygon / the number of corners it has
+numVertices poly = len (bounds poly)
   where
     len :: (Natural, Natural) -> Natural
     len (minIndex, maxIndex)
       | minIndex <= maxIndex = maxIndex - minIndex + 1
       | otherwise           = 0
 
--- calculate signed area of a polygon
--- TODO reference formula
 polygonArea :: Polygon -> Double
+-- ^calculate the signed are of a polygon
+-- see also: https://en.wikipedia.org/wiki/Polygon#Area_and_centroid
 polygonArea poly = 0.5 * sum [summand (nth i) (nth (i+1)) | i <- [1..n]]
   where
-    summand :: Point -> Point -> Double
-    summand (Point xi yi) (Point xi1 yi1) = xi * yi1 - xi1 * yi
+    summand :: Vertex -> Vertex -> Double
+    summand (Vertex xi yi) (Vertex xi1 yi1) = xi * yi1 - xi1 * yi
 
     -- indices are selected to be safe. So we can use unsafeJust.
-    -- This could be avoided in the future, by not accessyying by index.
-    nth = unsafeJust . nthPoint poly
-    n = numPoints poly
+    -- This could be avoided in the future, by not accessing by index.
+    nth = unsafeJust . nthVertex poly
+    n = numVertices poly
 
--- In some rare cases this function is needed to unpack a Maybe
--- expression, which is guaranteed to contain a value.
--- Its almost the same as fromJust, but more expressive
 unsafeJust :: Maybe a -> a
+-- ^Unpack a Maybe if it's guaranteed to be a Just value.
+--
+-- In some rare cases this function is needed to unpack a Maybe
+-- expression.
+-- Its almost the same as fromJust, but more expressive
 unsafeJust x
   | isJust x  = fromJust x
   | otherwise = error "Something went terribly wrong, this should never happen. Reason: Tried to unpack an empty Maybe"
 
--- take function for all integral length types
 take' :: Integral a => a -> [b] -> [b]
+-- ^This is just a wrapper around the original take
+-- function to accept all integral values as length.
 take' n = take (fromIntegral n)
 
--- length function for all integral length types
 length' :: (Foldable t, Integral b) => t a -> b
+-- ^This is just a wrapper around the original length
+-- function to return any integral value as length.
 length' = fromIntegral . length
 
--- calculate centroid of a polygon
--- TODO reference formula
-polygonCenter :: Polygon -> Point
-polygonCenter poly = Point cX cY
+polygonCenter :: Polygon -> Vertex
+-- ^Calculate centroid of a polygon
+-- See also https://en.wikipedia.org/wiki/Polygon#Area_and_centroid
+polygonCenter poly = Vertex cX cY
   where
     a = let a' = polygonArea poly in
       if a' == 0 then
@@ -86,23 +95,28 @@ polygonCenter poly = Point cX cY
 
     -- indices are selected to be safe. So we can use unsafeJust.
     -- This could be avoided in the future, by not accessing by index.
-    nth = unsafeJust . nthPoint poly
+    nth = unsafeJust . nthVertex poly
 
-    summandX :: Point -> Point -> Double
-    summandX (Point xi yi) (Point xi1 yi1) = (xi + xi1) * (xi * yi1 - xi1 * yi)
+    summandX :: Vertex -> Vertex -> Double
+    summandX (Vertex xi yi) (Vertex xi1 yi1) = (xi + xi1) * (xi * yi1 - xi1 * yi)
 
-    summandY :: Point -> Point -> Double
-    summandY (Point xi yi) (Point xi1 yi1) = (yi + yi1) * (xi * yi1 - xi1 * yi)
+    summandY :: Vertex -> Vertex -> Double
+    summandY (Vertex xi yi) (Vertex xi1 yi1) = (yi + yi1) * (xi * yi1 - xi1 * yi)
 
-    n = numPoints poly
+    n = numVertices poly
 
--- split a polygon P with triangles 
+splitPolygon ::
+     Natural   -- ^iteration step
+  -> Natural   -- ^distance between two triangle vertices on the boundary
+  -> Polygon
+  -> [Polygon]
+-- ^splits a polygon P into triangles.
+--
 -- This function connects pairs of vertices of a polygon with its
 -- centroid to form triangles.
 --
 -- Every `step` vertex will be used to initialize a triangle
--- with another vertex `distance` hops away.
-splitPolygon :: Natural -> Natural -> Polygon -> [Polygon]
+-- with the centroid and another vertex `distance` hops away.
 splitPolygon step distance poly
   -- dont split zero area polygons
   | a == 0 = []
@@ -123,10 +137,10 @@ splitPolygon step distance poly
     --
     -- indices are selected to be safe. So we can use unsafeJust.
     -- This could be avoided in the future, by not accessing by index.
-    nth = unsafeJust . nthPoint poly
+    nth = unsafeJust . nthVertex poly
 
     -- n = |P|
-    n = numPoints poly
+    n = numVertices poly
 
     a = polygonArea poly
     center = polygonCenter poly
@@ -136,12 +150,13 @@ splitPolygon step distance poly
       polygon [center, p1, p2]
 
 
--- split a polygon P randomly into triangles 
+randomSplitPolygon :: Float -> Float -> Float -> Float -> Polygon -> [Polygon]
+-- ^split a polygon P randomly into triangles.
+--
 -- This function connects random pairs of vertices of a polygon with its
 -- centroid to form triangles.
 --
 -- it may also decide, not to split at all
-randomSplitPolygon :: Float -> Float -> Float -> Float -> Polygon -> [Polygon]
 randomSplitPolygon splitProbability splitRN stepRN distanceRN seed
   | splitRN < splitProbability = splitPolygon step distance seed 
   | otherwise                  = []
@@ -156,11 +171,11 @@ randomSplitPolygon splitProbability splitRN stepRN distanceRN seed
     distance = selectStep distanceRN
 
     -- n = |P|
-    n = numPoints seed
+    n = numVertices seed
 
     -- single steps should be most common, a full circle step
     -- the least common (it creates a "line" between the center and th
-    -- current point)
+    -- current vertex)
     --
     -- calculating [1,2,...,n-1,0] this way is not very efficient, but
     -- expressive about the circular structure. So I keep it like this
@@ -173,9 +188,14 @@ randomSplitPolygon splitProbability splitRN stepRN distanceRN seed
         (fromMaybe 1) -- standard value on empty selection shall be 1
       . (Statistics.weightedSelector (Statistics.cumulativeGeometricDistribution 0.8) validSteps)
 
--- repeadedly apply a polygon splitting function to a starting polygon
--- return set of resulting polygons after `depth` applications
-repeatedSplits :: (Polygon -> [Polygon]) -> Polygon -> Natural -> [Polygon]
+repeatedSplits ::
+     (Polygon -> [Polygon]) -- ^splitting function
+  -> Polygon                -- ^starting polygon
+  -> Natural                -- ^splitting depth / number of splittings
+  -> [Polygon]
+-- ^repeadedly apply a polygon splitting function to a starting polygon
+-- 
+-- returns the set of resulting polygons after `depth` applications of the split operation.
 repeatedSplits f seed depth = 
   foldl
     union
@@ -185,14 +205,32 @@ repeatedSplits f seed depth =
     rawSplits :: [[Polygon]]
     rawSplits = iterate (concat . map f) [seed]
 
-regularPolygonArt :: Natural -> Natural -> Natural -> Polygon -> [Polygon]
+regularPolygonArt ::
+     Natural -- ^number of splitting operations (depth)
+  -> Natural -- ^number of vertices after which the next split operation will be applied
+  -> Natural -- ^distance between polygon pairs on the boundary when forming a triangle
+  -> Polygon
+  -> [Polygon]
+-- ^split a polygon P into triangles.
+--
+-- This function connects pairs of vertices of a polygon with its
+-- centroid to form triangles.
+--
+-- The pairs are chosen to be exactly `distance` edges apart.
+-- The split operation will be applied every `step` vertices
 regularPolygonArt depth step distance seed =
   repeatedSplits (splitPolygon step distance) seed depth
 
 listUnion :: Eq a => [[a]] -> [a]
+-- ^calculates the union of all lists within a list
 listUnion = foldl union []
 
-randomizedPolygonArt :: RandomGen gen => gen -> Natural -> Polygon -> [Polygon]
+randomizedPolygonArt :: RandomGen gen =>
+     gen       
+  -> Natural    -- ^depth until which splits shall be applied
+  -> Polygon    -- ^starting polygon
+  -> [Polygon]
+-- ^generate a random piece of polygon "art"
 randomizedPolygonArt g depth seed = foldl union [] rawSplits
   where
     splitRNS = randoms g

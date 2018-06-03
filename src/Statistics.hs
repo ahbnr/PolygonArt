@@ -4,16 +4,17 @@ module Statistics where
 
 import Numeric.Natural as Natural
 
--- cumulative version (cdf) of the geomatric distribution
 cumulativeGeometricDistribution :: Float -> Natural -> Float
+-- ^cumulative version (cdf) of the geomatric distribution.
+-- https://en.wikipedia.org/wiki/Geometric_distribution
 cumulativeGeometricDistribution p n = 1 - (1 - p)^(n+1)
 
--- generate a function, which returns an item from a selection by its
+weightedSelector :: forall a.
+      (Natural -> Float) -- ^cumulative distribution function. Used to generate probabilities for the selection
+    -> [a]               -- ^selection 
+    -> (Float -> Maybe a)
+-- ^generate a function, which returns an item from a selection by it's
 -- probability.
---
--- It takes a cumulative distribution function `cdf` indicating the
--- probabilities and a selection.
-weightedSelector :: forall a. (Natural -> Float) -> [a] -> (Float -> Maybe a)
 weightedSelector cdf selection = select weightedSelection
   where
     -- generate an (infinite) list of weights by position within the
@@ -23,7 +24,7 @@ weightedSelector cdf selection = select weightedSelection
     -- apply the weights to the selection
     weightedSelection = zip weights selection
     
-    -- generated function as mentioned above
+    -- generated function as mentioned above.
     -- It searches the weighted selection until an item is found with
     -- a weight greater than the probability input
     --

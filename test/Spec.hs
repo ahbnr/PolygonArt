@@ -19,9 +19,9 @@ properties = testGroup "(checked by SmallCheck)"
 
 unitTests = testGroup "Unit tests" $
   let
-    rectangle = polygon [Point 0 0, Point 2 0, Point 2 2, Point 0 2]
-    triangle = polygon [Point 0 0, Point 2 0, Point 2 2]
-    pointEqual (Point a b) (Point x y) =
+    rectangle = polygon [Vertex 0 0, Vertex 2 0, Vertex 2 2, Vertex 0 2]
+    triangle = polygon [Vertex 0 0, Vertex 2 0, Vertex 2 2]
+    vertexEqual (Vertex a b) (Vertex x y) =
         fractionalEqual a x delta && fractionalEqual b y delta
       where delta = 0.0001
   in
@@ -29,15 +29,15 @@ unitTests = testGroup "Unit tests" $
       testCase "Testing centroid calculation for a rectangle" $
           assertBool
             ""
-            (pointEqual
-                (Point 1.0 1.0)
+            (vertexEqual
+                (Vertex 1.0 1.0)
                 (polygonCenter rectangle)
               ) 
     , testCase "Testing centroid calculation for a triangle" $
           assertBool
             ""
-            (pointEqual
-                (Point 1.333333 0.666667)
+            (vertexEqual
+                (Vertex 1.333333 0.666667)
                 (polygonCenter triangle)
               ) 
     , testCase "Testing area calculation of a rectangle" $

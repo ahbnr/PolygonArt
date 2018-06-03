@@ -1,8 +1,13 @@
 module SvgDrawing where
 
-import PolygonArt (Polygon, Point(Point), points)
+import PolygonArt (Polygon, Vertex(Vertex), vertices)
 
-drawSvg :: Double -> Double -> [String] -> String
+drawSvg ::
+       Double    -- ^width of the resulting svg image
+    -> Double    -- ^height of the resulting svg image
+    -> [String]  -- ^contents (will be separted by line)
+    -> String
+-- ^wraps the given strings in a \<svg ...>\</svg> tag
 drawSvg w h children = concat
   [
       "<svg width=\"",
@@ -15,9 +20,10 @@ drawSvg w h children = concat
     ]
 
 drawPolygon :: Polygon -> String
+-- ^builds a svg polygon tag
 drawPolygon poly = concat ["<polygon points=\"", pointStr, "\" style=\"fill:white;stroke:black;stroke-width:1\"/>"]
   where
     pointStr :: String
     pointStr =
       unwords
-        (map (\(Point x y) -> concat [show x, ",", show y]) (points poly))
+        (map (\(Vertex x y) -> concat [show x, ",", show y]) (vertices poly))
