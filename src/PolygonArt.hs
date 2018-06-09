@@ -122,7 +122,7 @@ splitPolygon step distance poly
   | a == 0 = []
   -- if no steps shall be performed, only one split will be
   -- performed with the first vertex
-  | step' == 0 = [makeSubTriangle (nth 1) (nth distance)]
+  | step' == 0 = [makeSubTriangle (nth 1) (nth (distance + 1))]
   | otherwise =
       [makeSubTriangle (nth i) (nth i') |
           i <- [1,1+step'..n],

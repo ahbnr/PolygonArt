@@ -17,7 +17,7 @@ You'll need the Haskell development tool [stack](https://haskellstack.org).
 
 ### Installation
 Follow the official [installation guide](https://docs.haskellstack.org/en/stable/install_and_upgrade/) of stack.
-If you use Arch Linux, the following command should do:
+If you're using Arch Linux, the following command should do:
 
 ```console
 pacman -S stack
@@ -40,7 +40,7 @@ stack exec polygon <seed>
 ```
 
 It will output the image in SVG format.
-Here a complete example for generating and displaying an image on a graphical Linux installation:
+Here's a complete example for generating and displaying an image on a graphical Linux installation:
 
 ```console
 stack exec polygon 1337 > output.svg && xdg-open output.svg
