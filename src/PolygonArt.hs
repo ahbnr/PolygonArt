@@ -233,9 +233,10 @@ randomizedPolygonArt :: RandomGen gen =>
 -- ^generate a random piece of polygon "art"
 randomizedPolygonArt g depth seed = foldl union [] rawSplits
   where
-    splitRNS = randoms g
-    stepRNS = randoms g
-    distanceRNS = randoms g
+    g1:g2:g3:gs = (map mkStdGen . randoms) g 
+    splitRNS = randoms g1
+    stepRNS = randoms g2
+    distanceRNS = randoms g3
 
     combinedRNS :: [(Float, Float, Float)]
     combinedRNS = zip3 splitRNS stepRNS distanceRNS
