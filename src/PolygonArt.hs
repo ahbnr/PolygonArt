@@ -2,21 +2,23 @@ module PolygonArt where
 
 import Data.Array
 import Data.List
-import Debug.Trace
 import System.Random
 import Data.Maybe
+import Data.Fixed
 import Numeric.Natural as Natural
 
 import qualified Statistics
+import qualified Color
 
 data Vertex = Vertex Double Double deriving (Eq, Show)
 
 -- Polygons are modelled as arrays
 --
 -- All functions using this type make the following assumptions:
--- * the vertices within the array are in clockwise order around the boundary
--- * indices start at 1 (allows for cleaner code with the Natual data type).
+-- - the vertices within the array are in clockwise order around the boundary
+-- - indices start at 1 (allows for cleaner code with the Natual data type).
 type Polygon = Array Natural Vertex
+data ColoredPolygon = ColoredPolygon Polygon Color.Color
 
 polygon :: [Vertex] -> Polygon
 -- ^construct a polygon from a set of vertices.
@@ -104,6 +106,44 @@ polygonCenter poly = Vertex cX cY
     summandY (Vertex xi yi) (Vertex xi1 yi1) = (yi + yi1) * (xi * yi1 - xi1 * yi)
 
     n = numVertices poly
+
+
+randomlyColorPolygons :: RandomGen g => g -> [Polygon] -> [ColoredPolygon]
+-- ^randomly colors a list of polygons with two complementary colors
+randomlyColorPolygons g polys = (zipWith ColoredPolygon polys . map selectColor) generators
+  where
+    -- a base color hue will be randomly chosen
+    (hueRaw, g2) = random g
+    hue = hueRaw * 360
+
+    -- and it's complement calculated
+    (Color.HSL hueComplement _ _) = Color.complement (Color.HSL hue 0 0)
+
+    generators = (map mkStdGen . randoms) g2
+
+    selectColor :: RandomGen g => g -> Color.Color
+    -- ^randomly selects the base color or it's complement and varies its
+    -- hue, lightness, and saturation slightly
+    selectColor g = Color.ColorHSL (
+          Color.HSL
+            ((selectHue hueDecision + maxHueVariation * hueMod) `mod'` 360)
+            (baseSat + maxSatVariation * satMod)
+            (baseLight + maxLightVariation * lightMod)
+        )
+      where
+        (hueDecision, g') = random g
+
+        baseSat = 0.7
+        baseLight = 0.2
+        maxSatVariation = 0.3
+        maxLightVariation = 0.6
+        maxHueVariation = 2
+
+        selectHue :: Bool -> Float
+        selectHue True = hueComplement
+        selectHue _ = hue
+        
+        hueMod:satMod:lightMod:rns = randoms g'
 
 splitPolygon ::
      Natural   -- ^iteration step
@@ -229,11 +269,11 @@ randomizedPolygonArt :: RandomGen gen =>
      gen       
   -> Natural    -- ^depth until which splits shall be applied
   -> Polygon    -- ^starting polygon
-  -> [Polygon]
--- ^generate a random piece of polygon "art"
-randomizedPolygonArt g depth seed = foldl union [] rawSplits
+  -> [ColoredPolygon]
+-- ^generates a random piece of polygon "art"
+randomizedPolygonArt g depth seed = randomlyColorPolygons g4 generatedPolygons
   where
-    g1:g2:g3:gs = (map mkStdGen . randoms) g 
+    g1:g2:g3:g4:gs = (map mkStdGen . randoms) g 
     splitRNS = randoms g1
     stepRNS = randoms g2
     distanceRNS = randoms g3
@@ -254,3 +294,5 @@ randomizedPolygonArt g depth seed = foldl union [] rawSplits
         (flip ($))
         [seed]
         (take' depth (map (listUnion .) (map map randomizedSplitters)))
+
+    generatedPolygons = foldl union [] rawSplits

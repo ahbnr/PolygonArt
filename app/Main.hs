@@ -25,7 +25,7 @@ main = do
   let generator = mkStdGen seed
 
   -- generate the image data
-  let art = randomizedPolygonArt generator 7 poly
+  let art = randomizedPolygonArt generator 6 poly
   -- generate the svg output
   let picture = drawSvg size size (map drawPolygon art)
 

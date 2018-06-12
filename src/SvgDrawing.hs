@@ -1,6 +1,7 @@
 module SvgDrawing where
 
-import PolygonArt (Polygon, Vertex(Vertex), vertices)
+import PolygonArt (ColoredPolygon(ColoredPolygon), Polygon, Vertex(Vertex), vertices)
+import Color
 
 drawSvg ::
        Double    -- ^width of the resulting svg image
@@ -19,11 +20,17 @@ drawSvg w h children = concat
       "</svg>"
     ]
 
-drawPolygon :: Polygon -> String
+drawPolygon :: ColoredPolygon -> String
 -- ^builds a svg polygon tag
-drawPolygon poly = concat ["<polygon points=\"", pointStr, "\" style=\"fill:white;stroke:black;stroke-width:1\"/>"]
+drawPolygon (ColoredPolygon poly color) = concat ["<polygon points=\"", pointStr, "\" style=\"fill:", renderColor color ,";stroke:black;stroke-width:1\"/>"]
   where
     pointStr :: String
     pointStr =
       unwords
         (map (\(Vertex x y) -> concat [show x, ",", show y]) (vertices poly))
+
+renderColor :: Color -> String
+-- ^converts a color into SVG/CSS rgb(...) string representation
+renderColor (ColorHSL hsl) = (renderColor . ColorRGB . hslToRgb) hsl
+renderColor (ColorRGB rgb) = (renderColor . ColorRGB3B . rgbTo3Byte) rgb
+renderColor (ColorRGB3B (RGB3Byte r g b)) = concat ["rgb(", show r, ", ", show g, ", ", show b, ")"]
