@@ -1,6 +1,6 @@
 # PolygonArt / TriangleArt
 
-![Example](data/demo.png)
+![Example](data/demo.gif)
 
 Random vector-art generator based on splitting polygons/triangles into
 sub-triangles. Written in Haskell λ.
