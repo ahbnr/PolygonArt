@@ -52,6 +52,5 @@ stack haddock
 ```
 
 ## Next milestones
-* add random color
 * integrate into a web service
 * add more tests
