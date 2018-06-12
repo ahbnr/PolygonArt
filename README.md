@@ -30,6 +30,8 @@ stack build
 stack exec polygon 12 > output.svg && xdg-open output.svg
 ```
 
+*Doesn't work?* You **need [stack](#prerequisites)**!
+
 ## Prerequisites
 You'll need the Haskell development tool [stack](https://haskellstack.org).
 
