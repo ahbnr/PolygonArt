@@ -12,6 +12,24 @@ then recursively applied to the set of constructed polygons.
 This started as a toy project and serves now as a training ground to
 improve my Haskell skills.
 
+## Table of Contents
+* [TL;DR](#tldr)
+* [Prerequisites](#prerequisites)
+  * [Installation](#installation)
+* [Building](#building)
+* [Testing](#testing)
+* [Usage](#usage)
+* [Documentation](#documentation-haddock)
+* [Next milestones](#next-milestones)
+
+## TL;DR
+```console
+git clone https://github.com/ahaubner/PolygonArt.git
+cd PolygonArt
+stack build
+stack exec polygon 12 > output.svg && xdg-open output.svg
+```
+
 ## Prerequisites
 You'll need the Haskell development tool [stack](https://haskellstack.org).
 
