@@ -24,7 +24,7 @@ improve my Haskell skills.
 
 ## TL;DR
 ```console
-git clone https://github.com/ahaubner/PolygonArt.git
+git clone https://github.com/ahbnr/PolygonArt.git
 cd PolygonArt
 stack build
 stack exec polygon 12 > output.svg && xdg-open output.svg
