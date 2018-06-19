@@ -14,13 +14,13 @@ improve my Haskell skills.
 
 ## Table of Contents
 * [TL;DR](#tldr)
+* [Web interface](#web-interface)
 * [Prerequisites](#prerequisites)
   * [Installation](#installation)
 * [Building](#building)
 * [Testing](#testing)
 * [Usage](#usage)
 * [Documentation](#documentation-haddock)
-* [Next milestones](#next-milestones)
 
 ## TL;DR
 ```console
@@ -31,6 +31,9 @@ stack exec polygon 12 > output.svg && xdg-open output.svg
 ```
 
 *Doesn't work?* You **need [stack](#prerequisites)**!
+
+## Web interface
+You can also comfortably use the generator from a Web interface: https://github.com/ahbnr/PolygonArtWeb
 
 ## Prerequisites
 You'll need the Haskell development tool [stack](https://haskellstack.org).
@@ -70,7 +73,3 @@ stack exec polygon 1337 > output.svg && xdg-open output.svg
 ```console
 stack haddock
 ```
-
-## Next milestones
-* integrate into a web service
-* add more tests
